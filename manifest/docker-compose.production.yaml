@@ -1,0 +1,15 @@
+version: "3.8"
+services:
+  learn-go-restful-api-db-migration-production:
+    container_name: ${DB_MIGRATION_CONTAINER}
+    hostname: ${DB_MIGRATION_HOST}
+    image: "${DB_MIGRATION_IMAGE}:${DB_MIGRATION_IMAGE_TAG}"
+    environment:
+      BACKEND_STAGE: ${BACKEND_STAGE}
+    networks:
+      - learn-go-restful-api-environment-production
+
+networks:
+  learn-go-restful-api-environment-production:
+    external: true
+    name: learn-go-restful-api-environment-production

@@ -1,0 +1,8 @@
+{
+  "driver": "postgres",
+  "encryption_key": "6E5A7234753777217A25432A462D4A614E645267556B58703273357638792F41",
+  "pg_talk_user": "589764f5e01498beb3912d51ff72b497830ecf945a",
+  "pg_talk_password": "71abe871d3d9a236c89ce44247a143bf0d7aec",
+  "master_dsn_no_cred": "postgres://%s:%s@learn-go-restful-api-postgresql.service:5432/learn-go-restful-api?sslmode=disable",
+  "file_migration": "file://db/migrations"
+}
