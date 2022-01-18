@@ -1,8 +1,8 @@
 {
   "driver": "postgres",
-  "encryption_key": "4D6351655468576D5A7134743777217A25432A462D4A614E645267556B586E32",
-  "pg_talk_user": "28408ee125bae1f14c9209e4086a757de6ac84fa9e",
-  "pg_talk_password": "3ad7bfd0422923927fd4e9bc8c06d804cd795a",
+  "encryption_key": "68566D597133743677397A2443264629",
+  "pg_talk_user": "lodnDEXyZ8vHyDmrH7EL73WFYX0Z",
+  "pg_talk_password": "EwK4Be9fwJpQh6JMVkI8DT_Zmw",
   "master_dsn_no_cred": "postgres://%s:%s@learn-go-restful-api-postgresql.service:5432/learn-go-restful-api?sslmode=disable",
   "file_migration": "file://db/migrations"
 }

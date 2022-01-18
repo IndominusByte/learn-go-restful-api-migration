@@ -4,7 +4,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"encoding/hex"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -36,7 +36,7 @@ func (gsm *gsmData) loadFromGsm() error {
 	}
 
 	// decode data
-	cdn := &Credentials{Key: gsm.EncryptionKey}
+	cdn := &Credentials{Key: []byte(gsm.EncryptionKey)}
 	pgtalkuser, pgtalkusererr := cdn.Decrypt(gsm.PgTalkUser)
 	if pgtalkusererr != nil {
 		return err
@@ -53,66 +53,39 @@ func (gsm *gsmData) loadFromGsm() error {
 }
 
 type Credentials struct {
-	Key string
+	Key []byte
 }
 
-func (c *Credentials) Encrypt(text string) (string, error) {
-	key, err := hex.DecodeString(c.Key)
+func (c *Credentials) Encrypt(data []byte) (string, error) {
+	block, err := aes.NewCipher(c.Key)
 	if err != nil {
 		return "", err
 	}
-	plaintext := []byte(text)
-
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return "", err
-	}
-
-	// The IV needs to be unique, but not secure. Therefore it's common to
-	// include it at the beginning of the ciphertext.
-	ciphertext := make([]byte, aes.BlockSize+len(plaintext))
+	ciphertext := make([]byte, aes.BlockSize+len(data))
 	iv := ciphertext[:aes.BlockSize]
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
 		return "", err
 	}
-
 	stream := cipher.NewCFBEncrypter(block, iv)
-	stream.XORKeyStream(ciphertext[aes.BlockSize:], plaintext)
-
-	// It's important to remember that ciphertexts must be authenticated
-	// (i.e. by using crypto/hmac) as well as being encrypted in order to
-	// be secure.
-	return fmt.Sprintf("%x", ciphertext), nil
+	stream.XORKeyStream(ciphertext[aes.BlockSize:], data)
+	return base64.RawURLEncoding.EncodeToString(ciphertext), nil
 }
 
-func (c *Credentials) Decrypt(text string) (string, error) {
-	key, err := hex.DecodeString(c.Key)
+func (c *Credentials) Decrypt(encrypted string) ([]byte, error) {
+	ciphertext, err := base64.RawURLEncoding.DecodeString(encrypted)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-
-	ciphertext, err := hex.DecodeString(text)
+	block, err := aes.NewCipher(c.Key)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return "", err
-	}
-
-	// The IV needs to be unique, but not secure. Therefore it's common to
-	// include it at the beginning of the ciphertext.
 	if len(ciphertext) < aes.BlockSize {
-		return "", errors.New("ciphertext too short")
+		return nil, errors.New("ciphertext too short")
 	}
 	iv := ciphertext[:aes.BlockSize]
 	ciphertext = ciphertext[aes.BlockSize:]
-
-	stream := cipher.NewCFBDecrypter(block, iv)
-
-	// XORKeyStream can work in-place if the two arguments are the same.
-	stream.XORKeyStream(ciphertext, ciphertext)
-
-	return fmt.Sprintf("%s", ciphertext), nil
+	cfb := cipher.NewCFBDecrypter(block, iv)
+	cfb.XORKeyStream(ciphertext, ciphertext)
+	return ciphertext, nil
 }
